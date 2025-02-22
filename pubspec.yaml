@@ -48,6 +48,9 @@ dependencies:
   location:
   pusher_channels_flutter: ^2.2.1
   flutter_paystack: ^1.0.7
+  #mapbox_maps_flutter:
+  #mapbox_gl:
+
 
 dev_dependencies:
   flutter_test:

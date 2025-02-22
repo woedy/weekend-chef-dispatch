@@ -1,129 +1,31 @@
-import 'dart:convert';
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:weekend_chef_client/utils/custom_ui.dart';
 
-import 'package:weekend_chef_dispatch/Components/generic_loading_dialogbox.dart';
-
-import 'package:weekend_chef_dispatch/HomePage/models/home_data_model.dart';
-import 'package:weekend_chef_dispatch/SplashScreen/spalsh_screen.dart';
-import 'package:weekend_chef_dispatch/constants.dart';
-import 'package:http/http.dart' as http;
-import 'package:weekend_chef_dispatch/utils/custom_ui.dart';
-
-Future<HomeDataModel> get_home_data(String lat, String lng) async {
-  print('##################');
-  print(lat);
-  print(lng);
-  var token = await getApiPref();
-  var userId = await getUserIDPref();
-
-  final response = await http.get(
-    Uri.parse(
-        "${hostName}api/homepage/client-homepage-data/?user_id=$userId&lat=$lat&lng=$lng"),
-    headers: <String, String>{
-      'Content-Type': 'application/json; charset=UTF-8',
-      'Accept': 'application/json',
-      'Authorization': 'Token ' + token.toString()
-    },
-  );
-  print(response.statusCode);
-  if (response.statusCode == 200 || response.statusCode == 201) {
-    print(jsonDecode(response.body));
-    final result = json.decode(response.body);
-
-    return HomeDataModel.fromJson(jsonDecode(response.body));
-  } else if (response.statusCode == 422) {
-    print(jsonDecode(response.body));
-    return HomeDataModel.fromJson(jsonDecode(response.body));
-  } else if (response.statusCode == 403) {
-    print(jsonDecode(response.body));
-    return HomeDataModel.fromJson(jsonDecode(response.body));
-  } else if (response.statusCode == 400) {
-    print(jsonDecode(response.body));
-    return HomeDataModel.fromJson(jsonDecode(response.body));
-  } else if (response.statusCode == 401) {
-    print(jsonDecode(response.body));
-    return HomeDataModel.fromJson(jsonDecode(response.body));
-  } else {
-    //throw Exception('Failed to load data');
-    print(jsonDecode(response.body));
-    return HomeDataModel.fromJson(jsonDecode(response.body));
-  }
-}
-
-class HomePageWidget extends StatefulWidget {
-  const HomePageWidget({super.key});
+class DispatchHomeWidget extends StatefulWidget {
+  const DispatchHomeWidget({super.key});
 
   @override
-  State<HomePageWidget> createState() => _HomePageWidgetState();
+  State<DispatchHomeWidget> createState() => _DispatchHomeWidgetState();
 }
 
-class _HomePageWidgetState extends State<HomePageWidget>
-    with TickerProviderStateMixin {
+class _DispatchHomeWidgetState extends State<DispatchHomeWidget> with TickerProviderStateMixin {
   final scaffoldKey = GlobalKey<ScaffoldState>();
-  late GoogleMapController mapController;
-  late BitmapDescriptor customIcon;
-   LatLng? _currentLocation;
-
   TabController? _tabController;
-  int _selectedIndex = 0;
-  Future<HomeDataModel>? _futureHomeData;
-
-
 
   @override
   void initState() {
     super.initState();
-
-    _futureHomeData = get_home_data('5.6037', '-0.1870');
+    _tabController = new TabController(length: 3, vsync: this);
   }
 
-
-
-  Future<void> _loadCustomIcon() async {
-    customIcon = await BitmapDescriptor.fromAssetImage(
-      ImageConfiguration(size: Size(48, 48)), // Specify the size
-      'assets/icons/shop_icon.png',
-    );
-    setState(() {}); // Update the state to refresh the map
+  @override
+  void dispose() {
+    super.dispose();
   }
-
-
-
-
 
   @override
   Widget build(BuildContext context) {
-    return (_futureHomeData == null) ? buildColumn() : buildFutureBuilder();
-  }
-
-  buildColumn() {
-    return Scaffold(
-      body: Container(),
-    );
-  }
-
-  FutureBuilder<HomeDataModel> buildFutureBuilder() {
-    return FutureBuilder<HomeDataModel>(
-        future: _futureHomeData,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const LoadingDialogBox(
-              text: 'Please Wait..',
-            );
-          } else if (snapshot.hasData) {
-            var data = snapshot.data!;
-
-            var userData = data.data!.userData;
-            var categories = data.data!.dishCategories!;
-            var notification_count = data.data!.notificationCount!;
-
-            if (data.message == "Successful") {
-
-
-          return GestureDetector(
+    return GestureDetector(
       onTap: () {
         FocusScope.of(context).unfocus();
         FocusManager.instance.primaryFocus?.unfocus();
@@ -137,22 +39,20 @@ class _HomePageWidgetState extends State<HomePageWidget>
             Expanded(
               child: Stack(
                 children: [
-          GoogleMap(
-            onMapCreated: (GoogleMapController controller) {
-              mapController = controller;
-              if (_currentLocation != null) {
-                // Center the map on the current location if available
-                mapController
-                    .animateCamera(CameraUpdate.newLatLng(_currentLocation!));
-              }
-            },
-            initialCameraPosition: CameraPosition(
-              target: LatLng(5.622164357, -0.17336083), // Fallback center
-              zoom: 12.0,
-            ),
-            
-          ),
-           Column(
+                  Container(
+                    width: double.infinity,
+                    height: double.infinity,
+                    decoration: BoxDecoration(
+                      color: FlutterFlowTheme.of(context).secondaryBackground,
+                      image: DecorationImage(
+                        fit: BoxFit.cover,
+                        image: Image.network(
+                          'https://images.unsplash.com/photo-1730317195704-c4666cc830a6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0NTYyMDF8MHwxfHNlYXJjaHw1fHxtYXB8ZW58MHx8fHwxNzM0NDUyNzU1fDA&ixlib=rb-4.0.3&q=80&w=1080',
+                        ).image,
+                      ),
+                    ),
+                  ),
+                  Column(
                     mainAxisSize: MainAxisSize.max,
                     children: [
                       Row(
@@ -722,187 +622,9 @@ class _HomePageWidgetState extends State<HomePageWidget>
         ),
       ),
     );
-     
-         
-            } else {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const SplashScreen()));
-              });
-            }
-          }
-
-          return const LoadingDialogBox(
-            text: 'Please Wait.!!!.',
-          );
-        });
-  }
-
-  Positioned customNavBar(BuildContext context) {
-    return Positioned(
-      bottom: 0,
-      left: 0,
-      right: 0,
-      child: Container(
-        // padding: EdgeInsets.symmetric(vertical: 13),
-        margin: const EdgeInsets.all(5),
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [bookPrimary, Colors.transparent], // Blue gradient effect
-            begin: Alignment.bottomCenter,
-            end: Alignment.topCenter,
-          ),
-          borderRadius: BorderRadius.only(
-            bottomLeft: Radius.circular(20),
-            bottomRight: Radius.circular(20),
-          ),
-          /*           boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.grey.withOpacity(0.5),
-                                    spreadRadius: 1,
-                                    blurRadius: 3,
-                                    offset: Offset(0, 1),
-                                  ),
-                                ], */
-        ),
-        child: ClipRRect(
-          borderRadius: const BorderRadius.only(
-            bottomLeft: Radius.circular(20),
-            bottomRight: Radius.circular(20),
-          ), // Match the container's border radius
-          child: Stack(
-            children: [
-              BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 1.0, sigmaY: 2.0),
-                child: Container(
-                  decoration: const BoxDecoration(
-                    color: Colors
-                        .transparent, // Use transparent to let the gradient show
-                  ),
-                ),
-              ),
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(
-                      0.2), // Slightly transparent white background
-                ),
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      InkWell(
-                        onTap: () {
-                          print('Home tapped');
-                        },
-                        child: Column(
-                          children: [
-                            Image.asset(
-                              "assets/icons/home.png",
-                              height: 20,
-                              color:
-                                  bookPrimary, // Change color to contrast with blue
-                            ),
-                            const Text('Home',
-                                style:
-                                    TextStyle(fontSize: 9, color: bookPrimary))
-                          ],
-                        ),
-                      ),
-                      InkWell(
-                        onTap: () {
-      /*                     Navigator.of(context).push(
-                            MaterialPageRoute(
-                                builder: (BuildContext context) =>
-                                    const MyOrdersWidget()),
-                          ); */
-                        },
-                        child: Column(
-                          children: [
-                            Column(
-                              children: [
-                                Image.asset(
-                                  "assets/icons/card.png",
-                                  height: 20,
-                                  color: Colors.white,
-                                ),
-                                const Text('My Orders',
-                                    style: TextStyle(
-                                        fontSize: 9, color: Colors.white))
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                      InkWell(
-                        onTap: () {},
-                        child: const Column(
-                          children: [
-                            Column(
-                              children: [
-                                Icon(Icons.explore, color: Colors.white),
-                                Text('Transactions',
-                                    style: TextStyle(
-                                        fontSize: 9, color: Colors.white))
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                      InkWell(
-                        onTap: () {},
-                        child: Column(
-                          children: [
-                            Column(
-                              children: [
-                                Image.asset(
-                                  "assets/icons/message.png",
-                                  height: 20,
-                                  color: Colors.white,
-                                ),
-                                const Text('Settings',
-                                    style: TextStyle(
-                                        fontSize: 9, color: Colors.white))
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                      InkWell(
-                        onTap: () {
-        /*                   Navigator.of(context).push(
-                            MaterialPageRoute(
-                                builder: (BuildContext context) =>
-                                    const ClientProfilePageWidget()),
-                          ); */
-                        },
-                        child: Column(
-                          children: [
-                            Column(
-                              children: [
-                                Image.asset(
-                                  "assets/icons/person.png",
-                                  height: 20,
-                                  color: Colors.white,
-                                ),
-                                const Text('Profile',
-                                    style: TextStyle(
-                                        fontSize: 9, color: Colors.white))
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+  
+  
+  
+  
   }
 }
